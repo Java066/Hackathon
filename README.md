@@ -25,70 +25,23 @@ This repo now has:
 │   ├── run_backend.ps1
 │   ├── run_frontend.sh
 │   ├── run_frontend.ps1
+│   ├── run_frontend.sh
 │   └── smoke_test_api.py
 └── requirements.txt
 ```
 
----
-
-## Linux/macOS setup
-
-### Backend terminal
+## 1) Backend terminal
 
 ```bash
-cd /path/to/Hackathon
+cd /workspace/Hackathon
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
+pip install --upgrade pip
+pip install -r requirements.txt
+uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### Frontend terminal
-
-```bash
-cd /path/to/Hackathon
-export FRONTEND_API_BASE_URL=http://127.0.0.1:8000
-./scripts/run_frontend.sh
-```
-
----
-
-## Windows PowerShell setup
-
-### Backend terminal
-
-```powershell
-cd C:\Users\<you>\Documents\GitHub\Hackathon
-py -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-Or one command:
-
-```powershell
-.\scripts\run_backend.ps1
-```
-
-### Frontend terminal
-
-```powershell
-cd C:\Users\<you>\Documents\GitHub\Hackathon
-$env:FRONTEND_API_BASE_URL = "http://127.0.0.1:8000"
-.\scripts\run_frontend.ps1
-```
-
-Open:
-- `http://127.0.0.1:5173/frontend%20thingy/index.html`
-- `http://127.0.0.1:5173/frontend%20thingy/ai-chat.html`
-
----
-
-## API
-
+API endpoints:
 - `GET /health` → `{"status":"ok"}`
 - `POST /chat`
 
@@ -104,11 +57,21 @@ Open:
 }
 ```
 
----
+## 2) Frontend terminal
 
-## Smoke test
+```bash
+cd /workspace/Hackathon
+export FRONTEND_API_BASE_URL=http://127.0.0.1:8000
+./scripts/run_frontend.sh
+```
 
-With your virtualenv active:
+Open:
+- `http://127.0.0.1:5173/frontend%20thingy/index.html`
+- AI chat page: `http://127.0.0.1:5173/frontend%20thingy/ai-chat.html`
+
+## 3) Smoke test
+
+With the virtualenv active:
 
 ```bash
 python scripts/smoke_test_api.py
