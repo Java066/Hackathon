@@ -65,23 +65,39 @@
 		const modal = qs('#tx-modal');
 		const form = qs('#tx-form');
 
-		if(addBtn) addBtn.addEventListener('click', () => { window.openModal('tx-modal'); });
-		if(qs('.modal-close')) qs('.modal-close').addEventListener('click', () => window.closeModal('tx-modal'));
-		if(qs('#tx-cancel')) qs('#tx-cancel').addEventListener('click', () => window.closeModal('tx-modal'));
+		if(addBtn) addBtn.addEventListener('click', () => {
+			if(form) { delete form.dataset.editId; form.reset(); }
+			window.openModal('tx-modal');
+		});
+		if(qs('.modal-close')) qs('.modal-close').addEventListener('click', () => { if(form) delete form.dataset.editId; window.closeModal('tx-modal'); });
+		if(qs('#tx-cancel')) qs('#tx-cancel').addEventListener('click', () => { if(form) delete form.dataset.editId; window.closeModal('tx-modal'); });
 
 		if(form){
 			form.addEventListener('submit', (e) => {
 				e.preventDefault();
 				const fd = new FormData(form);
-				const tx = {
-					date: fd.get('date'),
-					description: fd.get('description'),
-					amount: Number(fd.get('amount')),
-					category: fd.get('category'),
-					account: fd.get('account')
-				};
-				const created = window.transactionService.add(tx);
-				window.showToast('Transaction added', 'success');
+				const editId = form.dataset.editId;
+				if(editId){
+					window.transactionService.update(editId, {
+						date: fd.get('date'),
+						description: fd.get('description'),
+						amount: Number(fd.get('amount')),
+						category: fd.get('category'),
+						account: fd.get('account')
+					});
+					window.showToast('Transaction updated', 'success');
+					delete form.dataset.editId;
+				} else {
+					const tx = {
+						date: fd.get('date'),
+						description: fd.get('description'),
+						amount: Number(fd.get('amount')),
+						category: fd.get('category'),
+						account: fd.get('account')
+					};
+					window.transactionService.add(tx);
+					window.showToast('Transaction added', 'success');
+				}
 				window.closeModal('tx-modal');
 				form.reset();
 				loadAndRender();
@@ -89,50 +105,34 @@
 		}
 
 		// Delegated edit/delete
-		document.querySelector('#transactions-table tbody').addEventListener('click', (e) => {
-			const del = e.target.closest('.btn-delete');
-			const edit = e.target.closest('.btn-edit');
-			if(del){
-				const id = del.dataset.id;
-				if(confirm('Delete this transaction?')){
-					window.transactionService.remove(id);
-					window.showToast('Deleted', 'warning');
-					loadAndRender();
+		const tbody = qs('#transactions-table tbody');
+		if(tbody){
+			tbody.addEventListener('click', (e) => {
+				const del = e.target.closest('.btn-delete');
+				const edit = e.target.closest('.btn-edit');
+				if(del){
+					const id = del.dataset.id;
+					if(confirm('Delete this transaction?')){
+						window.transactionService.remove(id);
+						window.showToast('Deleted', 'warning');
+						loadAndRender();
+					}
 				}
-			}
-			if(edit){
-				const id = edit.dataset.id;
-				const tx = window.transactionService.find(id);
-				if(!tx) return;
-				const formEl = qs('#tx-form');
-				formEl.date.value = tx.date;
-				formEl.description.value = tx.description;
-				formEl.amount.value = tx.amount;
-				formEl.category.value = tx.category;
-				formEl.account.value = tx.account || '';
-				// remove old submit handler and replace to perform update
-				formEl.removeEventListener('submit', ()=>{});
-				window.openModal('tx-modal');
-				// on save, update
-				const handler = function(ev){
-					ev.preventDefault();
-					const fd = new FormData(formEl);
-					window.transactionService.update(id, {
-						date: fd.get('date'),
-						description: fd.get('description'),
-						amount: Number(fd.get('amount')),
-						category: fd.get('category'),
-						account: fd.get('account')
-					});
-					window.showToast('Updated', 'success');
-					window.closeModal('tx-modal');
-					formEl.reset();
-					loadAndRender();
-					formEl.removeEventListener('submit', handler);
-				};
-				formEl.addEventListener('submit', handler);
-			}
-		});
+				if(edit){
+					const id = edit.dataset.id;
+					const tx = window.transactionService.find(id);
+					if(!tx) return;
+					const formEl = qs('#tx-form');
+					formEl.date.value = tx.date;
+					formEl.description.value = tx.description;
+					formEl.amount.value = tx.amount;
+					formEl.category.value = tx.category;
+					formEl.account.value = tx.account || '';
+					formEl.dataset.editId = id;
+					window.openModal('tx-modal');
+				}
+			});
+		}
 
 		// filters
 		['#tx-search','#tx-category','#tx-from','#tx-to'].forEach(sel => {
