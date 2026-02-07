@@ -1,3 +1,4 @@
+// previous version (empty) restored
 // Chart helpers using Chart.js if available
 (function(){
 	function createSpendingChart(canvasId){

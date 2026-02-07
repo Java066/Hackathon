@@ -1,3 +1,4 @@
+// previous version (empty) restored
 // Simple validators exposed on window.validators
 (function(){
 	function validateEmail(email){
