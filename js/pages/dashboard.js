@@ -1,53 +1,180 @@
-// Dashboard Page Handler
+/**
+ * Dashboard Page Handler
+ */
 
-// ============================================
-// Mock Data for Demo
-// ============================================
-const mockUserData = {
-    name: 'Ahmed Khan',
-    email: 'ahmed@example.com',
-    totalBalance: 5750.32,
-    monthlyIncome: 4500.00,
-    monthlyExpenses: 2100.50
-};
+(function() {
+    const Dashboard = {
+        // Mock data
+        userData: {
+            name: 'Ahmed Khan',
+            email: 'ahmed@example.com'
+        },
+        
+        recentTransactions: [
+            { id: 1, date: 'Feb 06, 2026', merchant: 'Salary Deposit', category: 'Income', amount: 4500, type: 'income' },
+            { id: 2, date: 'Feb 05, 2026', merchant: 'Coffee Shop', category: 'Food', amount: 12.50, type: 'expense' },
+            { id: 3, date: 'Feb 04, 2026', merchant: 'Netflix', category: 'Entertainment', amount: 15.99, type: 'expense' },
+            { id: 4, date: 'Feb 03, 2026', merchant: 'Grocery Store', category: 'Shopping', amount: 87.45, type: 'expense' },
+            { id: 5, date: 'Feb 02, 2026', merchant: 'Gas Station', category: 'Transport', amount: 45.00, type: 'expense' }
+        ],
 
-const mockTransactions = [
-    {
-        id: 1,
-        date: '2026-02-06',
-        description: 'Salary Deposit',
-        category: 'Income',
-        amount: 4500,
-        type: 'income',
-        status: 'completed'
-    },
-    {
-        id: 2,
-        date: '2026-02-05',
-        description: 'Coffee Shop',
-        category: 'Food & Dining',
-        amount: -12.50,
-        type: 'expense',
-        status: 'completed'
-    },
-    {
-        id: 3,
-        date: '2026-02-04',
-        description: 'Netflix Subscription',
-        category: 'Entertainment',
-        amount: -15.99,
-        type: 'expense',
-        status: 'completed'
-    },
-    {
-        id: 4,
-        date: '2026-02-03',
-        description: 'Grocery Store',
-        category: 'Shopping',
-        amount: -87.45,
-        type: 'expense',
-        status: 'completed'
-    },
+        categoryBreakdown: {
+            'Food & Dining': 485,
+            'Shopping': 720,
+            'Entertainment': 150,
+            'Transport': 320,
+            'Utilities': 200,
+            'Other': 245
+        },
+
+        monthlyStats: {
+            income: 4500,
+            expenses: 2120,
+            savings: 2380
+        },
+
+        init() {
+            this.render();
+            this.setupEventListeners();
+        },
+
+        render() {
+            const mainLayout = document.getElementById('mainLayout');
+            const mainContent = document.getElementById('mainContent');
+
+            // Load header and sidebar
+            mainLayout.innerHTML = Components.createHeader(this.userData.name) + 
+                                   Components.createSidebar('dashboard');
+
+            // Render main content
+            mainContent.innerHTML = `
+                <div class="container">
+                    <h1 style="margin-bottom: var(--spacing-lg)">Welcome back, ${this.userData.name}! 👋</h1>
+
+                    <!-- Stats Cards -->
+                    <div class="dashboard">
+                        ${Components.createStatCard('💰', 'Total Balance', '5,750.32 AED', 'Your net worth', { value: 12.5, label: '+12.5% vs last month' })}
+                        ${Components.createStatCard('📈', 'Income', '4,500.00 AED', 'This month', { value: 5, label: 'Monthly salary' })}
+                        ${Components.createStatCard('📉', 'Expenses', '2,120.00 AED', 'This month', { value: -8, label: '-8% vs last month' })}
+                        ${Components.createStatCard('💳', 'Savings', '2,380.00 AED', '52.9% of income', { value: 15, label: '+15% growth' })}
+                    </div>
+
+                    <!-- Charts Section -->
+                    <div class="dashboard-grid mt-xl">
+                        <div class="chart-card card">
+                            <h2>📊 Spending Breakdown</h2>
+                            <div class="chart-container">
+                                <canvas id="categoryChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="quick-stats">
+                            <div class="card">
+                                <h3>Quick Stats</h3>
+                                <div class="flex-col gap-lg">
+                                    <div>
+                                        <div class="text-secondary text-sm">Monthly Average</div>
+                                        <div class="text-lg font-semibold">1,234 AED</div>
+                                    </div>
+                                    <div>
+                                        <div class="text-secondary text-sm">Largest Expense</div>
+                                        <div class="text-lg font-semibold">Shopping (720 AED)</div>
+                                    </div>
+                                    <div>
+                                        <div class="text-secondary text-sm">Savings Goal</div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill success" style="width: 65%"></div>
+                                        </div>
+                                        <div class="text-secondary text-sm mt-sm">65% towards goal</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Transactions -->
+                    <div class="card mt-xl">
+                        <div class="flex-between">
+                            <h2>💳 Recent Transactions</h2>
+                            <a href="transactions.html" class="btn btn-primary btn-small">View All</a>
+                        </div>
+                        <div style="overflow-x: auto;">
+                            <table class="transactions-table">
+                                <thead>
+                                    <tr>
+                                        <th>Description</th>
+                                        <th>Category</th>
+                                        <th>Amount</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${this.recentTransactions.map(tx => Components.createTransactionRow(tx)).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="mt-xl" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-lg);">
+                        <button class="btn btn-primary btn-large" onclick="openAddTransactionModal()">➕ Add Transaction</button>
+                        <button class="btn btn-secondary btn-large" onclick="window.location.href='budget.html'">🎯 Set Budget</button>
+                        <button class="btn btn-outline btn-large" onclick="window.location.href='ai-chat.html'">🤖 Ask AI</button>
+                    </div>
+                </div>
+            `;
+
+            // Initialize layout
+            Components.initializeLayout('dashboard');
+            this.renderCharts();
+        },
+
+        renderCharts() {
+            // Doughnut chart for category breakdown
+            const ctx = document.getElementById('categoryChart');
+            if (ctx) {
+                const colors = ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(this.categoryBreakdown),
+                        datasets: [{
+                            data: Object.values(this.categoryBreakdown),
+                            backgroundColor: colors,
+                            borderColor: '#FFF',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            }
+        },
+
+        setupEventListeners() {
+            // Any additional event listeners
+        }
+    };
+
+    // Initialize on page load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            Dashboard.init();
+        });
+    } else {
+        Dashboard.init();
+    }
+
+    // Make Dashboard globally available
+    window.Dashboard = Dashboard;
+})();
     {
         id: 5,
         date: '2026-02-02',

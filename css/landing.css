@@ -59,8 +59,8 @@ nav {
 
 /* Hero Section */
 .hero {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: linear-gradient(135deg, #f0f9ff 0%, #f3e8ff 100%);
+    color: #1f2937;
     padding: 6rem 2rem;
     text-align: center;
     min-height: 600px;
@@ -88,8 +88,8 @@ nav {
 .cta-button {
     display: inline-block;
     padding: 1rem 2rem;
-    background: white;
-    color: #667eea;
+    background: #10B981;
+    color: white;
     text-decoration: none;
     border-radius: 50px;
     font-weight: bold;
