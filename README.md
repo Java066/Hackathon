@@ -1,10 +1,10 @@
 # Where's My Money — Full-stack Setup
 
 This repo now has:
-- **Python agent/core logic** in `app/` (kept as source of truth)
+- **Python agent/core logic** in `app/` (source of truth)
 - **FastAPI backend** in `backend/app/`
 - **Static Twilight/Twinlight frontend** in `frontend thingy/` + `js/` + `css/`
-- **Run scripts** in `scripts/`
+- **Run scripts** in `scripts/` for Bash and PowerShell
 
 ## Repo layout
 
@@ -12,6 +12,7 @@ This repo now has:
 .
 ├── app/                      # existing finance agent logic (source of truth)
 ├── backend/
+│   ├── __init__.py
 │   └── app/
 │       ├── main.py           # FastAPI app
 │       ├── api/schemas.py    # request/response models
@@ -21,6 +22,9 @@ This repo now has:
 ├── css/                      # frontend CSS
 ├── scripts/
 │   ├── run_backend.sh
+│   ├── run_backend.ps1
+│   ├── run_frontend.sh
+│   ├── run_frontend.ps1
 │   ├── run_frontend.sh
 │   └── smoke_test_api.py
 └── requirements.txt
@@ -73,6 +77,30 @@ With the virtualenv active:
 python scripts/smoke_test_api.py
 ```
 
+---
+
+## Quick endpoint tests
+
+### Bash
+
+```bash
+curl -s http://127.0.0.1:8000/health
+curl -s -X POST http://127.0.0.1:8000/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message":"Hello","user_id":"demo","context":{"goal_aed":500}}'
+```
+
+### PowerShell
+
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/health" -Method Get
+
+$body = @{ message = "Hello"; user_id = "demo"; context = @{ goal_aed = 500 } } | ConvertTo-Json -Depth 4
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/chat" -Method Post -ContentType "application/json" -Body $body
+```
+
+---
+
 ## Environment
 
 Copy env file:
@@ -82,17 +110,5 @@ cp .env.example .env
 ```
 
 Set:
-- `LLM_API_KEY` (optional; app has fallback response if unset)
-- `LLM_MODEL`, `LLM_PROVIDER` as needed.
-
-## Two-terminal quick start
-
-Terminal 1:
-```bash
-./scripts/run_backend.sh
-```
-
-Terminal 2:
-```bash
-./scripts/run_frontend.sh
-```
+- `LLM_API_KEY` (optional; fallback response is used if unset)
+- `LLM_MODEL`, `LLM_PROVIDER` as needed
