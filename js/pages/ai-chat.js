@@ -5,16 +5,14 @@
 (function() {
     const AIChat = {
         messages: [
-            { type: 'ai', text: 'Hi! 👋 I\'m your AI financial assistant. I can help you with budgeting, spending analysis, and financial advice. What would you like to know?' }
+            { type: 'ai', text: 'Hi! 👋 I\'m your AI financial assistant. Ask me where your money goes and I\'ll analyze your summary.' }
         ],
-        
+
         suggestedPrompts: [
+            'Where did most of my money go?',
             'How can I reduce my spending?',
-            'What\'s my average monthly expense?',
-            'Analyze my spending patterns',
-            'Budget recommendations for me',
-            'How much should I save monthly?',
-            'Best financial tips for saving'
+            'Any suspicious transactions?',
+            'How can I save more this month?'
         ],
 
         init() {
@@ -25,25 +23,23 @@
             const mainLayout = document.getElementById('mainLayout');
             const mainContent = document.getElementById('mainContent');
 
-            mainLayout.innerHTML = Components.createHeader('Ahmed Khan') + 
+            mainLayout.innerHTML = Components.createHeader('Ahmed Khan') +
                                    Components.createSidebar('ai-chat');
 
             mainContent.innerHTML = `
                 <h1>🤖 AI Financial Assistant</h1>
-                
-                <div class="chat-container card">
-                    <div class="chat-messages" id="chatMessages">
-                    </div>
 
-                    <div class="suggested-prompts" id="suggestedPromptsDiv">
-                    </div>
+                <div class="chat-container card">
+                    <div class="chat-messages" id="chatMessages"></div>
+
+                    <div class="suggested-prompts" id="suggestedPromptsDiv"></div>
 
                     <div class="chat-input-area">
                         <div class="chat-input-wrapper">
-                            <textarea 
-                                id="chatInput" 
-                                class="chat-input" 
-                                placeholder="Ask me anything about your finances..." 
+                            <textarea
+                                id="chatInput"
+                                class="chat-input"
+                                placeholder="Ask me anything about your finances..."
                                 rows="1"
                             ></textarea>
                             <button class="btn btn-primary" id="sendBtn" style="align-self: flex-end;">
@@ -79,8 +75,9 @@
             });
         },
 
-        sendMessage() {
+        async sendMessage() {
             const chatInput = document.getElementById('chatInput');
+            const sendBtn = document.getElementById('sendBtn');
             const text = chatInput.value.trim();
 
             if (!text) return;
@@ -88,36 +85,23 @@
             this.messages.push({ type: 'user', text });
             chatInput.value = '';
             chatInput.style.height = 'auto';
+            sendBtn.disabled = true;
 
             this.renderMessages();
             this.renderPrompts();
-            this.simulateAIResponse();
-        },
 
-        simulateAIResponse() {
-            setTimeout(() => {
-                const responses = {
-                    'reduce': 'To reduce spending, track categories where you overspend. Set category budgets and review weekly. Consider the 50/30/20 rule: 50% needs, 30% wants, 20% savings.',
-                    'average': 'Based on your recent data, your average monthly expense is around 2,120 AED. This is 47% of your income, leaving room for savings.',
-                    'analyze': 'Your top spending categories: Food (28%), Shopping (22%), Entertainment (18%). Consider optimizing Food and Shopping categories.',
-                    'budget': 'I recommend: Food 600, Shopping 400, Entertainment 300, Utilities 300, Transport 200. This leaves 320 for other needs.',
-                    'save': 'A healthy savings goal is 20% of income. With 4,500 AED income, aim to save 900 AED monthly.',
-                    'tip': 'Top financial tips: (1) Automate savings, (2) Track expenses, (3) Build emergency fund, (4) Use the 50/30/20 rule, (5) Review budget monthly.'
-                };
-
-                let response = 'That\'s a great question! Based on your financial profile, here\'s what I recommend...';
-                const lastMessage = this.messages[this.messages.length - 1].text.toLowerCase();
-
-                for (const [keyword, answer] of Object.entries(responses)) {
-                    if (lastMessage.includes(keyword)) {
-                        response = answer;
-                        break;
-                    }
-                }
-
-                this.messages.push({ type: 'ai', text: response });
+            try {
+                const result = await window.ApiClient.postChat({ message: text });
+                this.messages.push({ type: 'ai', text: result.reply || 'No reply returned.' });
+            } catch (error) {
+                this.messages.push({
+                    type: 'ai',
+                    text: `I couldn't reach the backend API. ${error.message}`
+                });
+            } finally {
+                sendBtn.disabled = false;
                 this.renderMessages();
-            }, 1000);
+            }
         },
 
         renderMessages() {
@@ -128,13 +112,12 @@
                 </div>
             `).join('');
 
-            // Auto-scroll to bottom
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         },
 
         renderPrompts() {
             const promptsDiv = document.getElementById('suggestedPromptsDiv');
-            
+
             if (this.messages.length <= 1) {
                 promptsDiv.innerHTML = this.suggestedPrompts.map(prompt => `
                     <button class="prompt-btn">${this.escapeHtml(prompt)}</button>
