@@ -1,0 +1,63 @@
+/* Transactions page styles */
+:root {}
+
+.page-container{
+    max-width: 1100px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.page-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:1rem;
+    margin-bottom:1rem;
+}
+
+.page-header h1{ margin:0; font-size:1.5rem; color:var(--dark); }
+
+.page-actions{ display:flex; align-items:center; gap:1rem; }
+
+.filters{ display:flex; gap:0.5rem; align-items:center; }
+.filters input[type="search"], .filters select, .filters input[type="date"]{
+    padding:0.5rem 0.75rem;
+    border:1px solid var(--light-gray);
+    border-radius:6px;
+    background:var(--white);
+}
+
+.btn.primary, .btn.primary:focus{ background:var(--primary); color:var(--white); border:none; padding:0.6rem 0.9rem; border-radius:8px; cursor:pointer; }
+.btn{ padding:0.45rem 0.7rem; border-radius:6px; border:1px solid transparent; background:transparent; cursor:pointer; }
+
+.transactions-list{ background:var(--white); border-radius:10px; padding:1rem; box-shadow:var(--shadow-sm); }
+
+table.table{ width:100%; border-collapse:collapse; font-size:0.95rem; }
+table.table thead th{ text-align:left; padding:0.75rem 0.5rem; border-bottom:1px solid var(--light-gray); color:var(--gray); font-weight:600; }
+table.table tbody td{ padding:0.75rem 0.5rem; border-bottom:1px dashed #eee; vertical-align:middle; }
+table.table tbody tr.placeholder td{ text-align:center; color:var(--gray); padding:2rem; }
+
+td.amount{ font-weight:700; }
+td.amount::before{ content:''; }
+
+.btn.small{ padding:0.35rem 0.5rem; font-size:0.85rem; border-radius:6px; }
+
+/* Modal tweaks to keep form compact */
+#tx-modal .modal-content{ max-width:520px; width:92%; }
+#tx-form label{ display:block; margin-bottom:0.5rem; font-size:0.95rem; }
+#tx-form input[type="text"], #tx-form input[type="date"], #tx-form input[type="number"], #tx-form select{
+    width:100%; padding:0.5rem; border:1px solid var(--light-gray); border-radius:6px; margin-top:0.25rem; box-sizing:border-box;
+}
+
+.modal-actions{ display:flex; gap:0.5rem; justify-content:flex-end; margin-top:1rem; }
+
+/* Responsive */
+@media (max-width:800px){
+    .page-header{ flex-direction:column; align-items:flex-start; }
+    .page-actions{ width:100%; justify-content:space-between; }
+    .filters{ flex-wrap:wrap; gap:0.5rem; }
+    table.table thead{ display:none; }
+    table.table tbody td{ display:block; width:100%; padding:0.6rem 0; }
+    table.table tbody tr{ margin-bottom:0.75rem; display:block; background:var(--light-gray); padding:0.75rem; border-radius:8px; }
+    table.table tbody td:before{ content: attr(data-label); display:block; font-weight:600; color:var(--gray); margin-bottom:0.25rem; }
+}
