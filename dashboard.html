@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Where's My Money</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-sidebar">
+                    💰 Where's My Money
+                </div>
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="#" class="nav-link active" data-page="overview">
+                        <span class="icon">📊</span>
+                        <span class="label">Overview</span>
+                    </a></li>
+                    <li><a href="#" class="nav-link" data-page="transactions">
+                        <span class="icon">💳</span>
+                        <span class="label">Transactions</span>
+                    </a></li>
+                    <li><a href="#" class="nav-link" data-page="categories">
+                        <span class="icon">🏷️</span>
+                        <span class="label">Categories</span>
+                    </a></li>
+                    <li><a href="#" class="nav-link" data-page="budgets">
+                        <span class="icon">💰</span>
+                        <span class="label">Budgets</span>
+                    </a></li>
+                    <li><a href="#" class="nav-link" data-page="analytics">
+                        <span class="icon">📈</span>
+                        <span class="label">Analytics</span>
+                    </a></li>
+                    <li><a href="#" class="nav-link" data-page="settings">
+                        <span class="icon">⚙️</span>
+                        <span class="label">Settings</span>
+                    </a></li>
+                </ul>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="logout-btn" id="logoutBtn">
+                    <span class="icon">🚪</span>
+                    <span class="label">Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="dashboard-header">
+                <div class="header-left">
+                    <h1>Welcome back, <span id="userName">User</span>! 👋</h1>
+                </div>
+                <div class="header-right">
+                    <div class="header-date">
+                        <span id="currentDate"></span>
+                    </div>
+                    <div style="margin-right:1rem;">
+                        <a href="ai-chat.html" class="chat-send-button">AI Chat</a>
+                    </div>
+                    <div class="user-profile">
+                        <img src="https://via.placeholder.com/40" alt="User Avatar" class="avatar">
+                        <div class="user-info">
+                            <p class="user-name" id="userNameProfile">User Name</p>
+                            <p class="user-email" id="userEmailProfile">user@example.com</p>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Quick Stats -->
+            <section class="stats-section">
+                <div class="stat-card total-balance">
+                    <div class="stat-header">
+                        <h3>Total Balance</h3>
+                        <span class="icon">💵</span>
+                    </div>
+                    <div class="stat-value">
+                        $<span id="totalBalance">0.00</span>
+                    </div>
+                    <p class="stat-change positive">↑ 12.5% from last month</p>
+                </div>
+
+                <div class="stat-card income">
+                    <div class="stat-header">
+                        <h3>Income</h3>
+                        <span class="icon">📈</span>
+                    </div>
+                    <div class="stat-value">
+                        $<span id="totalIncome">0.00</span>
+                    </div>
+                    <p class="stat-change">This month</p>
+                </div>
+
+                <div class="stat-card expenses">
+                    <div class="stat-header">
+                        <h3>Expenses</h3>
+                        <span class="icon">📉</span>
+                    </div>
+                    <div class="stat-value">
+                        $<span id="totalExpenses">0.00</span>
+                    </div>
+                    <p class="stat-change">This month</p>
+                </div>
+
+                <div class="stat-card savings">
+                    <div class="stat-header">
+                        <h3>Savings Rate</h3>
+                        <span class="icon">🎯</span>
+                    </div>
+                    <div class="stat-value">
+                        <span id="savingsRate">0</span>%
+                    </div>
+                    <p class="stat-change">Of monthly income</p>
+                </div>
+            </section>
+
+            <!-- Recent Transactions -->
+            <section class="transactions-section">
+                <div class="section-header">
+                    <h2>Recent Transactions</h2>
+                    <a href="#" class="view-all">View All →</a>
+                </div>
+
+                <div class="transactions-container">
+                    <table class="transactions-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Category</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionsBody">
+                            <!-- Populated by JavaScript -->
+                        </tbody>
+                    </table>
+
+                    <div id="noTransactions" class="empty-state">
+                        <p>📭 No transactions yet</p>
+                        <p>Add your first transaction to get started</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="js/pages/dashboard.js"></script>
+</body>
+</html>
