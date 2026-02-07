@@ -1,53 +1,233 @@
-// Signup Page Handler with Backend API Integration
+/**
+ * Signup Page Handler
+ */
 
-// ============================================
-// API Configuration
-// ============================================
-const API_CONFIG = {
-    baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
-    endpoints: {
-        signup: '/auth/signup',
-        checkEmail: '/auth/check-email',
-        verifyEmail: '/auth/verify-email'
-    },
-    timeout: 10000
-};
+(function() {
+    class SignupForm {
+        constructor() {
+            this.form = document.getElementById('signupForm');
+            this.fullnameInput = document.getElementById('fullname');
+            this.emailInput = document.getElementById('email');
+            this.passwordInput = document.getElementById('password');
+            this.confirmPasswordInput = document.getElementById('confirmPassword');
+            this.termsCheckbox = document.getElementById('terms');
+            this.submitBtn = document.getElementById('submitBtn');
+            this.strengthIndicator = document.getElementById('strengthIndicator');
+            this.strengthText = document.getElementById('strengthText');
+            this.isSubmitting = false;
 
-// ============================================
-// Signup Form Class
-// ============================================
-class SignupForm {
-    constructor() {
-        this.form = document.getElementById('signupForm');
-        this.fullnameInput = document.getElementById('fullname');
-        this.emailInput = document.getElementById('email');
-        this.passwordInput = document.getElementById('password');
-        this.confirmPasswordInput = document.getElementById('confirmPassword');
-        this.termsCheckbox = document.getElementById('terms');
-        this.submitButton = this.form?.querySelector('.auth-button');
-        this.passwordHint = document.querySelector('.password-hint');
-        this.isSubmitting = false;
-        
-        this.init();
+            if (this.form) {
+                this.init();
+            }
+        }
+
+        init() {
+            this.setupEventListeners();
+        }
+
+        setupEventListeners() {
+            // Form submission
+            this.form.addEventListener('submit', (e) => this.handleSubmit(e));
+
+            // Real-time validation
+            this.fullnameInput.addEventListener('blur', () => this.validateFullname());
+            this.emailInput.addEventListener('blur', () => this.validateEmail());
+            this.passwordInput.addEventListener('input', () => this.updatePasswordStrength());
+            this.passwordInput.addEventListener('blur', () => this.validatePassword());
+            this.confirmPasswordInput.addEventListener('blur', () => this.validateConfirmPassword());
+
+            // Clear errors on input
+            this.fullnameInput.addEventListener('input', () => this.clearError('fullname'));
+            this.emailInput.addEventListener('input', () => this.clearError('email'));
+            this.passwordInput.addEventListener('input', () => this.clearError('password'));
+            this.confirmPasswordInput.addEventListener('input', () => this.clearError('confirmPassword'));
+        }
+
+        validateFullname() {
+            const fullname = this.fullnameInput.value.trim();
+            
+            if (!fullname) {
+                this.showError('fullnameError', 'Full name is required');
+                return false;
+            }
+
+            if (!Validators.fullName(fullname)) {
+                this.showError('fullnameError', 'Please enter your first and last name');
+                return false;
+            }
+
+            this.clearError('fullname');
+            return true;
+        }
+
+        validateEmail() {
+            const email = this.emailInput.value.trim();
+
+            if (!email) {
+                this.showError('emailError', 'Email is required');
+                return false;
+            }
+
+            if (!Validators.email(email)) {
+                this.showError('emailError', 'Please enter a valid email address');
+                return false;
+            }
+
+            this.clearError('email');
+            return true;
+        }
+
+        validatePassword() {
+            const password = this.passwordInput.value;
+
+            if (!password) {
+                this.showError('passwordError', 'Password is required');
+                return false;
+            }
+
+            if (password.length < 8) {
+                this.showError('passwordError', 'Password must be at least 8 characters');
+                return false;
+            }
+
+            if (!Validators.password(password)) {
+                this.showError('passwordError', 'Password must contain uppercase, lowercase, and numbers');
+                return false;
+            }
+
+            this.clearError('password');
+            return true;
+        }
+
+        validateConfirmPassword() {
+            const password = this.passwordInput.value;
+            const confirmPassword = this.confirmPasswordInput.value;
+
+            if (!confirmPassword) {
+                this.showError('confirmPasswordError', 'Please confirm your password');
+                return false;
+            }
+
+            if (!Validators.passwordMatch(password, confirmPassword)) {
+                this.showError('confirmPasswordError', 'Passwords do not match');
+                return false;
+            }
+
+            this.clearError('confirmPassword');
+            return true;
+        }
+
+        validateTerms() {
+            if (!this.termsCheckbox.checked) {
+                this.showError('termsError', 'You must agree to the terms and conditions');
+                return false;
+            }
+
+            this.clearError('terms');
+            return true;
+        }
+
+        updatePasswordStrength() {
+            const password = this.passwordInput.value;
+            const strength = Validators.getPasswordStrength(password);
+
+            this.strengthIndicator.className = 'strength-indicator';
+            this.strengthIndicator.classList.add(strength || '');
+
+            const strengthMap = {
+                weak: 'Weak password',
+                fair: 'Fair password',
+                strong: 'Strong password'
+            };
+
+            this.strengthText.textContent = strengthMap[strength] || 'Create a strong password (min 8 chars)';
+        }
+
+        showError(elementId, message) {
+            const el = document.getElementById(elementId);
+            if (el) {
+                el.textContent = message;
+                el.style.display = 'block';
+            }
+        }
+
+        clearError(fieldName) {
+            const errorId = fieldName + 'Error';
+            const el = document.getElementById(errorId);
+            if (el) {
+                el.textContent = '';
+                el.style.display = 'none';
+            }
+        }
+
+        async handleSubmit(e) {
+            e.preventDefault();
+
+            // Validate all fields
+            const fullnameValid = this.validateFullname();
+            const emailValid = this.validateEmail();
+            const passwordValid = this.validatePassword();
+            const confirmPasswordValid = this.validateConfirmPassword();
+            const termsValid = this.validateTerms();
+
+            if (!fullnameValid || !emailValid || !passwordValid || !confirmPasswordValid || !termsValid) {
+                return;
+            }
+
+            this.isSubmitting = true;
+            this.submitBtn.disabled = true;
+            this.submitBtn.classList.add('btn-loading');
+            this.submitBtn.textContent = 'Creating Account...';
+
+            try {
+                // Simulate API call
+                await this.simulateSignup();
+
+                // Show success
+                Toast.success('Account created successfully!', 'Welcome');
+
+                // Redirect to login
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1500);
+            } catch (error) {
+                Toast.error(error.message || 'Signup failed. Please try again.', 'Error');
+                this.submitBtn.disabled = false;
+                this.submitBtn.classList.remove('btn-loading');
+                this.submitBtn.textContent = 'Create Account';
+                this.isSubmitting = false;
+            }
+        }
+
+        simulateSignup() {
+            return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    const fullname = this.fullnameInput.value;
+                    const email = this.emailInput.value;
+                    const password = this.passwordInput.value;
+
+                    // Save user data to localStorage (demo only)
+                    localStorage.setItem('new_user', JSON.stringify({
+                        fullname,
+                        email,
+                        createdAt: new Date().toISOString()
+                    }));
+
+                    resolve();
+                }, 1500);
+            });
+        }
     }
 
-    init() {
-        if (!this.form) return;
-        
-        this.setupEventListeners();
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            new SignupForm();
+        });
+    } else {
+        new SignupForm();
     }
-
-    setupEventListeners() {
-        // Real-time validation on input
-        this.fullnameInput?.addEventListener('input', () => this.validateFullname());
-        this.emailInput?.addEventListener('input', () => this.validateEmail());
-        this.emailInput?.addEventListener('blur', () => this.checkEmailAvailability());
-        this.passwordInput?.addEventListener('input', () => this.validatePassword());
-        this.confirmPasswordInput?.addEventListener('input', () => this.validateConfirmPassword());
-        this.termsCheckbox?.addEventListener('change', () => this.validateTerms());
-        
-        // Clear errors on focus
-        this.fullnameInput?.addEventListener('focus', () => this.clearError('fullname'));
+})();
         this.emailInput?.addEventListener('focus', () => this.clearError('email'));
         this.passwordInput?.addEventListener('focus', () => this.clearError('password'));
         this.confirmPasswordInput?.addEventListener('focus', () => this.clearError('confirmPassword'));
