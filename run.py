@@ -9,7 +9,7 @@ def main():
 
     summary = build_summary(txs)
 
-    print("\n========== WHERE DID MY MONEY GO? ==========")
+    print("\n==========+ WHERE DID MY MONEY GO? +==========")
     print(f"Transactions: {summary['tx_count']}")
     print(f"Total spent (AED): {summary['total_spent_aed']}\n")
 
