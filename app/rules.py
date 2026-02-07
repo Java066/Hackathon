@@ -23,16 +23,28 @@ _RULES = [
     (re.compile(r"\bSALARY\b|\bPAYROLL\b", re.IGNORECASE), "income"),
 
     # Groceries
-    (re.compile(r"\bCARREFOUR\b|\bLULU\b|\bSPINNEYS\b|\bWAITROSE\b|\bUNION\s*COOP\b", re.IGNORECASE), "groceries"),
+    (re.compile(
+        r"\bCARREFOUR\b|\bLULU\b|\bSPINNEYS\b|\bWAITROSE\b|\bUNION\s*COOP\b|\bCHOITHRAMS\b|\bAL\s*MADINA\b",
+        re.IGNORECASE
+    ), "groceries"),
 
-    # Food delivery / restaurants (for MVP keep delivery separate)
-    (re.compile(r"\bTALABAT\b|\bDELIVEROO\b|\bNOON\s*FOOD\b|\bZOMATO\b", re.IGNORECASE), "food_delivery"),
+    # Food delivery / restaurants
+    (re.compile(
+        r"\bTALABAT\b|\bDELIVEROO\b|\bNOON\s*FOOD\b|\bZOMATO\b|\bUBER\s*EATS\b",
+        re.IGNORECASE
+    ), "food_delivery"),
 
-    # Transport / ride hailing
-    (re.compile(r"\bCAREEM\b|\bUBER\b|\bBOLT\b|\bRTA\b", re.IGNORECASE), "transport"),
+    # Transport / ride hailing / public transport / parking
+    (re.compile(
+        r"\bCAREEM\b|\bUBER\b|\bBOLT\b|\bRTA\b|\bMETRO\b|\bTRAM\b|\bPARKING\b|\bSALIK\b",
+        re.IGNORECASE
+    ), "transport"),
 
     # Shopping / e-commerce / retail (non-grocery)
-    (re.compile(r"\bAMAZON\b|\bNOON\b|\bSHEIN\b|\bALIEXPRESS\b", re.IGNORECASE), "shopping"),
+    (re.compile(
+        r"\bAMAZON\b|\bNOON\b|\bSHEIN\b|\bALIEXPRESS\b|\bNAMSHI\b|\bMAX\b|\bCENTREPOINT\b",
+        re.IGNORECASE
+    ), "shopping"),
 
     # Fuel
     (re.compile(r"\bENOC\b|\bADNOC\b|\bEMARAT\b", re.IGNORECASE), "fuel"),
@@ -43,12 +55,25 @@ _RULES = [
     # Telecom
     (re.compile(r"\bETISALAT\b|\bDU\b|\bVIRGIN\s*MOBILE\b", re.IGNORECASE), "telecom"),
 
-    # Subscriptions (media)
-    (re.compile(r"\bNETFLIX\b|\bSPOTIFY\b|\bANGHAMI\b|\bYOUTUBE\s*PREMIUM\b", re.IGNORECASE), "subscriptions"),
+    # Subscriptions (media + cloud bundles)
+    (re.compile(
+        r"\bNETFLIX\b|\bSPOTIFY\b|\bANGHAMI\b|\bYOUTUBE\s*PREMIUM\b|\bOSN\b|\bDISNEY\+\b",
+        re.IGNORECASE
+    ), "subscriptions"),
+    (re.compile(
+        r"\bICLOUD\b|\bGOOGLE\s*ONE\b|\bMICROSOFT\s*365\b|\bOFFICE\s*365\b",
+        re.IGNORECASE
+    ), "subscriptions"),
 
-    # Digital services (cloud, app store, etc.)
-    (re.compile(r"\bGOOGLE\b|\bICLOUD\b|\bDROPBOX\b|\bMICROSOFT\b|\bAWS\b|\bGITHUB\b", re.IGNORECASE), "digital_services"),
-    (re.compile(r"\bAPPLE\b|\bAPP\s*STORE\b|\bITUNES\b", re.IGNORECASE), "digital_services"),
+    # Digital services (general SaaS / dev / infra)
+    (re.compile(
+        r"\bGOOGLE\b|\bICLOUD\b|\bDROPBOX\b|\bMICROSOFT\b|\bAWS\b|\bGITHUB\b",
+        re.IGNORECASE
+    ), "digital_services"),
+    (re.compile(
+        r"\bAPPLE\b|\bAPP\s*STORE\b|\bITUNES\b",
+        re.IGNORECASE
+    ), "digital_services"),
 ]
 
 
@@ -66,7 +91,12 @@ def normalize_merchant(raw: str) -> str:
     s = re.sub(r"\s+", " ", s)
 
     # Remove common suffix noise (optional)
-    s = re.sub(r"\b(LLC|L\.L\.C|LTD|FZCO|FZ-LLC|FZE|PJSC|CO\.|COMPANY)\b", "", s, flags=re.IGNORECASE)
+    s = re.sub(
+        r"\b(LLC|L\.L\.C|LTD|FZCO|FZ-LLC|FZE|PJSC|CO\.|COMPANY)\b",
+        "",
+        s,
+        flags=re.IGNORECASE,
+    )
 
     # Remove extra punctuation except spaces
     s = re.sub(r"[^\w\s]", " ", s)
