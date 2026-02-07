@@ -2,4 +2,3 @@ pandas
 python-dotenv
 openai
 streamlit
-Flask
