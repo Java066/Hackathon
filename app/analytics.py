@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from statistics import median
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Optional, Tuple
+
+SUBSCRIPTION_CATEGORIES = {"subscriptions", "digital_services"}
+RECURRING_BILL_CATEGORIES = {"utilities", "telecom"}
 
 
 def _parse_iso_date(d: str) -> Optional[datetime]:
@@ -14,104 +17,123 @@ def _parse_iso_date(d: str) -> Optional[datetime]:
         return None
 
 
+def _amount(tx: Dict) -> float:
+    return float(tx.get("amount", 0) or 0)
+
+
+def _category(tx: Dict) -> str:
+    return (tx.get("category") or "other").strip().lower()
+
+
+def _merchant(tx: Dict) -> str:
+    return (tx.get("merchant") or "UNKNOWN").strip() or "UNKNOWN"
+
+
+def _is_income(tx: Dict) -> bool:
+    return _amount(tx) > 0 or _category(tx) == "income"
+
+
+def _expense_transactions(txs: List[Dict]) -> List[Dict]:
+    return [tx for tx in txs if _amount(tx) < 0 and not _is_income(tx)]
+
+
 def total_spent(txs: List[Dict]) -> float:
-    # expenses are negative
-    return round(sum(tx["amount"] for tx in txs if float(tx.get("amount", 0)) < 0), 2)
+    expenses = _expense_transactions(txs)
+    return round(sum(-_amount(tx) for tx in expenses), 2)
 
 
 def top_categories(txs: List[Dict], n: int = 5) -> List[Tuple[str, float]]:
     sums = defaultdict(float)
-    for tx in txs:
-        amt = float(tx.get("amount", 0))
-        if amt < 0:
-            sums[tx.get("category", "other")] += -amt  # positive spend
+    for tx in _expense_transactions(txs):
+        sums[_category(tx)] += -_amount(tx)
+
     ranked = sorted(sums.items(), key=lambda x: x[1], reverse=True)[:n]
-    return [(k, round(v, 2)) for k, v in ranked]
+    return [(cat, round(amount, 2)) for cat, amount in ranked]
 
 
 def top_merchants(txs: List[Dict], n: int = 5) -> List[Tuple[str, float]]:
     sums = defaultdict(float)
-    for tx in txs:
-        amt = float(tx.get("amount", 0))
-        if amt < 0:
-            m = (tx.get("merchant") or "UNKNOWN").strip()
-            sums[m] += -amt
+    for tx in _expense_transactions(txs):
+        sums[_merchant(tx)] += -_amount(tx)
+
     ranked = sorted(sums.items(), key=lambda x: x[1], reverse=True)[:n]
-    return [(k, round(v, 2)) for k, v in ranked]
+    return [(merchant, round(amount, 2)) for merchant, amount in ranked]
 
 
 @dataclass
-class SubscriptionHit:
+class RecurringHit:
     merchant: str
     approx_amount: float
     occurrences: int
     dates: List[str]
 
 
-def detect_subscriptions(
+def _detect_recurring_by_categories(
     txs: List[Dict],
     *,
+    allowed_categories: set[str],
     min_occurrences: int = 2,
-    amount_tolerance_pct: float = 0.12,   # ±12%
+    amount_tolerance_pct: float = 0.12,
     min_days_between: int = 20,
     max_days_between: int = 40,
-) -> List[SubscriptionHit]:
-    """
-    Hackathon subscription heuristic:
-    - same merchant
-    - similar amount (within tolerance)
-    - repeats ~monthly (20–40 days between payments)
-    """
+) -> List[RecurringHit]:
     by_merchant = defaultdict(list)
 
-    for tx in txs:
-        amt = float(tx.get("amount", 0))
-        if amt >= 0:
+    for tx in _expense_transactions(txs):
+        if _category(tx) not in allowed_categories:
             continue
-        m = (tx.get("merchant") or "").strip()
-        if not m:
-            continue
+
         dt = _parse_iso_date((tx.get("date") or "").strip())
         if not dt:
             continue
-        by_merchant[m].append((dt, -amt))  # store as positive spend amount
 
-    hits: List[SubscriptionHit] = []
+        by_merchant[_merchant(tx)].append((dt, -_amount(tx)))
 
+    hits: List[RecurringHit] = []
     for merchant, items in by_merchant.items():
         if len(items) < min_occurrences:
             continue
 
         items.sort(key=lambda x: x[0])
-        amounts = [a for _, a in items]
+        amounts = [amount for _, amount in items]
         base = median(amounts)
 
-        # filter by amount closeness to base
-        filtered = [(d, a) for d, a in items if abs(a - base) <= base * amount_tolerance_pct]
+        if base <= 0:
+            continue
 
+        filtered = [
+            (date, amount)
+            for date, amount in items
+            if abs(amount - base) <= base * amount_tolerance_pct
+        ]
         if len(filtered) < min_occurrences:
             continue
 
-        # check if there is at least one "monthly-ish" gap
-        dates = [d for d, _ in filtered]
+        dates = [date for date, _ in filtered]
         gaps = [(dates[i] - dates[i - 1]).days for i in range(1, len(dates))]
-
-        monthly_like = any(min_days_between <= g <= max_days_between for g in gaps)
-        if not monthly_like:
+        has_monthly_gap = any(min_days_between <= gap <= max_days_between for gap in gaps)
+        if not has_monthly_gap:
             continue
 
         hits.append(
-            SubscriptionHit(
+            RecurringHit(
                 merchant=merchant,
                 approx_amount=round(base, 2),
                 occurrences=len(filtered),
-                dates=[d.strftime("%Y-%m-%d") for d in dates],
+                dates=[date.strftime("%Y-%m-%d") for date in dates],
             )
         )
 
-    # Sort by estimated monthly amount desc
     hits.sort(key=lambda h: h.approx_amount, reverse=True)
     return hits
+
+
+def detect_subscriptions(txs: List[Dict]) -> List[RecurringHit]:
+    return _detect_recurring_by_categories(txs, allowed_categories=SUBSCRIPTION_CATEGORIES)
+
+
+def detect_recurring_bills(txs: List[Dict]) -> List[RecurringHit]:
+    return _detect_recurring_by_categories(txs, allowed_categories=RECURRING_BILL_CATEGORIES)
 
 
 @dataclass
@@ -130,61 +152,58 @@ def detect_anomalies(
     min_amount: float = 150.0,
     top_n: int = 5,
 ) -> List[AnomalyHit]:
-    """
-    Simple anomaly rule:
-    - compare each expense vs median expense in its category
-    - if expense > multiplier * median AND expense >= min_amount => anomaly
-    """
-    # collect category expense amounts
-    cat_amounts = defaultdict(list)
-    for tx in txs:
-        amt = float(tx.get("amount", 0))
-        if amt < 0:
-            cat = tx.get("category", "other")
-            cat_amounts[cat].append(-amt)
+    category_amounts = defaultdict(list)
+    expenses = _expense_transactions(txs)
 
-    cat_medians = {cat: (median(vals) if vals else 0.0) for cat, vals in cat_amounts.items()}
+    for tx in expenses:
+        category_amounts[_category(tx)].append(-_amount(tx))
+
+    category_medians = {
+        cat: median(amounts)
+        for cat, amounts in category_amounts.items()
+        if len(amounts) >= 3
+    }
 
     anomalies: List[AnomalyHit] = []
-    for tx in txs:
-        amt = float(tx.get("amount", 0))
-        if amt >= 0:
-            continue
-
-        spend = -amt
+    for tx in expenses:
+        spend = -_amount(tx)
         if spend < min_amount:
             continue
 
-        cat = tx.get("category", "other")
-        med = cat_medians.get(cat, 0.0)
-        if med <= 0:
+        cat = _category(tx)
+        cat_median = category_medians.get(cat)
+        if cat_median is None:
             continue
 
-        if spend > multiplier * med:
+        if spend > multiplier * cat_median:
             anomalies.append(
                 AnomalyHit(
                     date=(tx.get("date") or ""),
-                    merchant=(tx.get("merchant") or "UNKNOWN"),
+                    merchant=_merchant(tx),
                     category=cat,
                     amount=round(spend, 2),
-                    reason=f"High spend vs your typical {cat} (>{multiplier:.1f}× median {med:.2f})",
+                    reason=(
+                        f"High spend vs your typical {cat} "
+                        f"(>{multiplier:.1f}× median {cat_median:.2f})"
+                    ),
                 )
             )
 
-    # sort by biggest amount
     anomalies.sort(key=lambda a: a.amount, reverse=True)
     return anomalies[:top_n]
 
 
 def build_summary(txs: List[Dict]) -> Dict:
-    subs = detect_subscriptions(txs)
-    anom = detect_anomalies(txs)
+    subscriptions = detect_subscriptions(txs)
+    recurring_bills = detect_recurring_bills(txs)
+    anomalies = detect_anomalies(txs)
 
     return {
+        "tx_count": len(txs),
         "total_spent_aed": total_spent(txs),
         "top_categories_aed": top_categories(txs, n=6),
         "top_merchants_aed": top_merchants(txs, n=6),
-        "subscriptions": [asdict(s) for s in subs],
-        "anomalies": [asdict(a) for a in anom],
-        "tx_count": len(txs),
+        "subscriptions": [asdict(hit) for hit in subscriptions],
+        "recurring_bills": [asdict(hit) for hit in recurring_bills],
+        "anomalies": [asdict(hit) for hit in anomalies],
     }
