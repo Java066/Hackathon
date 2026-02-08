@@ -44,8 +44,11 @@ python -m http.server 5173
 ```
 
 Open:
-- `http://127.0.0.1:5173/index.html`
-- AI chat page: `http://127.0.0.1:5173/ai-chat.html`
+- Landing page (click **Try the demo**): `http://127.0.0.1:5173/index.html`
+- Direct demo page: `http://127.0.0.1:5173/ai-chat.html`
+
+Optional API override for frontend:
+- Edit `frontend/js/config.js`, or set `window.API_BASE_URL` before `js/config.js` loads.
 
 ## Quick API tests
 
