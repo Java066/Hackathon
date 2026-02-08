@@ -89,3 +89,26 @@ Example chat request via curl:
 ```powershell
 curl -X POST http://127.0.0.1:8000/chat -H "Content-Type: application/json" -d '{"message":"How can I reduce monthly spending?"}'
 ```
+
+
+## Console demo (no frontend)
+
+1) Start backend in one terminal:
+
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+2) Start console chat client in another terminal:
+
+```powershell
+.\.venv\Scripts\python.exe .\console_chat.py
+```
+
+The client sends `POST http://127.0.0.1:8000/chat` with JSON body `{"message":"..."}` and prints the backend reply.
+
+Optional helper script (Windows):
+
+```powershell
+scripts\demo_console.bat
+```
