@@ -5,7 +5,7 @@
 (function() {
     const AIChat = {
         messages: [
-            { type: 'ai', text: 'Hi! 👋 I\'m your AI financial assistant. Ask me where your money goes and I\'ll analyze your summary.' }
+            { type: 'ai', text: "Great to have you here.\nA quick win is usually trimming one top spending category first.\n• Ask where most of your money is going\n• Ask me for a simple savings plan\n• Ask me to check for unusual charges\nWhat would you like to start with?" }
         ],
 
         suggestedPrompts: [
@@ -108,7 +108,7 @@
             const messagesDiv = document.getElementById('chatMessages');
             messagesDiv.innerHTML = this.messages.map(msg => `
                 <div class="chat-message ${msg.type}">
-                    <div class="message-bubble">${this.escapeHtml(msg.text)}</div>
+                    <div class="message-bubble">${this.formatMessage(msg.text)}</div>
                 </div>
             `).join('');
 
@@ -132,6 +132,11 @@
             } else {
                 promptsDiv.innerHTML = '';
             }
+        },
+
+
+        formatMessage(text) {
+            return this.escapeHtml(text).replace(/\n/g, '<br>');
         },
 
         escapeHtml(text) {
