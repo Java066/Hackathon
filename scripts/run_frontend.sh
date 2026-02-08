@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PORT="${PORT:-5173}"
-cd frontend
+cd "$(dirname "$0")/../frontend"
 
-echo "Serving static UI at http://127.0.0.1:${PORT}/index.html"
-python3 -m http.server "${PORT}"
+if [ ! -d node_modules ]; then
+  echo "Installing frontend dependencies..."
+  npm install
+fi
+
+echo "Starting React frontend..."
+npm run dev
