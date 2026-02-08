@@ -1,56 +1,91 @@
-# Hackathon Repo
+# Hackathon
 
-This repository contains a Python/FastAPI backend and frontend assets.
+This repo now has a single frontend app in `frontend/` (React dashboard) and the FastAPI backend in `backend/`.
 
-## Backend (primary service)
+## Repo layout
 
-The backend API lives under `backend/` and exposes:
-- `GET /health`
-- `POST /chat` with `{ "message": "...", "user_id": "optional" }`
+- `backend/` → FastAPI API (`/health`, `/chat`)
+- `frontend/` → React dashboard app (the only active frontend)
+- `_backup_frontends/` → legacy UI assets moved here safely (not deleted)
+- `scripts/` → helper scripts
 
-### Run backend (Linux/macOS)
+## Backend setup and run (Windows, no venv activation required)
 
-```bash
-./scripts/run_backend.sh
-```
-
-### Run backend (Windows PowerShell)
+Install backend dependencies if needed:
 
 ```powershell
-./scripts/run_backend.ps1
+.\.venv\Scripts\python.exe -m pip install -r backend\requirements.txt
 ```
 
-By default, the API runs at `http://127.0.0.1:8000`.
+Run backend:
 
-## Frontend (React dashboard)
-
-The React dashboard has been isolated into `react-dashboard/` to avoid conflicts with backend/root files.
-
-### Environment
-
-Create a frontend env file from the example:
-
-```bash
-cp react-dashboard/.env.example react-dashboard/.env
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-`REACT_APP_API_BASE_URL` defaults to `http://127.0.0.1:8000`.
+Backend URL: `http://127.0.0.1:8000`
 
-### Run frontend (Linux/macOS)
+## Frontend setup and run (Windows friendly)
 
-```bash
-cd react-dashboard
+The React app is CRA-based and supports `npm run dev` (alias to start).
+
+```powershell
+cd frontend
 npm install
 npm run dev
 ```
 
-### Run frontend (Windows CMD)
+Frontend URL: `http://localhost:3000`
 
-```cmd
-scripts\run_frontend.cmd
+### If PowerShell blocks npm.ps1
+
+Option 1 (temporary policy for current shell only):
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+npm install
+npm run dev
 ```
 
-## Existing legacy frontend folder
+Option 2 (bypass npm.ps1 using npm.cmd directly):
 
-The existing `frontend/` static HTML/CSS/JS files are preserved and considered **legacy/deprecated**.
-They are intentionally kept for reference and were not deleted to avoid destructive changes.
+```powershell
+& "C:\Program Files\nodejs\npm.cmd" install
+& "C:\Program Files\nodejs\npm.cmd" run dev
+```
+
+## Frontend ↔ Backend API config
+
+Frontend reads API base URL from:
+
+- `REACT_APP_API_BASE_URL` (CRA)
+- default fallback: `http://127.0.0.1:8000`
+
+Create env file if you want to override:
+
+```powershell
+copy frontend\.env.example frontend\.env
+```
+
+Example `frontend/.env`:
+
+```env
+REACT_APP_API_BASE_URL=http://127.0.0.1:8000
+```
+
+## Demo / smoke test
+
+- Backend health: `http://127.0.0.1:8000/health`
+- Frontend app: `http://localhost:3000`
+
+Health check via curl:
+
+```powershell
+curl http://127.0.0.1:8000/health
+```
+
+Example chat request via curl:
+
+```powershell
+curl -X POST http://127.0.0.1:8000/chat -H "Content-Type: application/json" -d '{"message":"How can I reduce monthly spending?"}'
+```
